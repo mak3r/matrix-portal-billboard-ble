@@ -1,15 +1,6 @@
 # A Billboard for Matrix Portal 
-This is a simple application which will display a choice of text or images on the Adafruit Matrix Portal 32x64 display. It sets up the Matrix Portal as an Access Point (AP) such that it can receive billboard content from a connected Station (Client)
+This is a simple application which will display a choice of text or images on the Adafruit Matrix Portal 32x64 display. It sets up the Matrix Portal to display the content in (content.json)[matrixportal/content.json]. Content can be switched by using the up/down buttons on the MatrixPortal or by connecting a BLE device and sending uart commands 'n'ext or 'p'revious. This was originally a branch of https://github.com/mak3r/matrix-portal-billboard however it is not possible to use the MatrixPortal API with BLE (only with WiFi). To accomdate the changes a new repo was required.
 
-## Code
-
-* lib - libraries and resources needed to run the bilboard app
-    - These can and should be updated to the latest versions 
-    - Libraries included here are used to simplify the time to get up and running 
-    - [Get the latest libraries](https://learn.adafruit.com/welcome-to-circuitpython/circuitpython-libraries)
-* `code.py` - the application code which parses and displays the content
-* `secrets.py` - contains secrets which will be loaded at boot time
-* `content.json` - this (optional) file can contain a set of possible content to be displayed on the billboard. 
 
 ## Quick Start
 1. [Prepare the MatrixPortal](https://learn.adafruit.com/matrix-portal-new-guide-scroller/prep-the-matrixportal)
