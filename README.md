@@ -15,17 +15,6 @@ This is a simple application which will display a choice of text or images on th
 
 Content can be displayed from the content.json file (hosted) on the Matrix Portal or dynamically (posted). The up/down buttons on the Matrix Portal can be used to switch to and display the next set of content on the device. 
 
-### Hosted Example
-
-* Display the next billboard hosted on the device:
-* `curl -X GET http://192.168.4.1/next`
-
-### Posted Example
-
-* Display the message "Hello Billboard" in yellow text against a purple background:
-* `curl -X POST http://192.168.4.1 -H 'Content-Type: application/json' -d '{"default": {"text": "Hello\nBillboard", "fg": "0xFFD700", "bg": "0x6C0BA9}}'`
-
-
 
 ## Content Layout
 The `content.json` file contains a list of content which can be cycled through on the Matrix Portal. Content could be text or bitmap images. Or a combination of both. Text can be scrolled orizontally and colors can be set for the foreground and background. The content file must be json formatted.
