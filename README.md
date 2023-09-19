@@ -1,5 +1,5 @@
 # A Billboard for Matrix Portal 
-This is a simple application which will display a choice of text or images on the Adafruit Matrix Portal 32x64 display. It sets up the Matrix Portal to display the content in (content.json)[matrixportal/content.json]. Content can be switched by using the up/down buttons on the MatrixPortal or by connecting a BLE device and sending uart commands 'n'ext or 'p'revious. This was originally a branch of https://github.com/mak3r/matrix-portal-billboard however it is not possible to use the MatrixPortal API with BLE (only with WiFi). To accomdate the changes a new repo was required.
+This is a simple application which will display a choice of text or images on the Adafruit Matrix Portal 32x64 display. It sets up the Matrix Portal to display the content in (content.json)[matrixportal/content.json]. Content can be switched by using the up/down buttons on the MatrixPortal or by connecting a BLE central device and sending uart commands 'n'ext or 'p'revious. This was originally a branch of https://github.com/mak3r/matrix-portal-billboard however it is not possible to use the MatrixPortal API with BLE (only with WiFi). To accomdate the changes a new repo was required.
 
 
 ## Quick Start
@@ -70,3 +70,10 @@ The `content.json` file contains a list of content which can be cycled through o
 }
 
 ```
+
+## Debugging in the REPL
+* Connect microcontroller via USB to computer
+* `screen /dev/tty.usb<serialid> 115200`
+* CTRL-D to enter REPL
+* `exec(open("code.py").read())`
+* inspect variables, write code as needed

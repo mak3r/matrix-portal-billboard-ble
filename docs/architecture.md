@@ -1,4 +1,4 @@
-# Matrix Portal Billboard Controller
+# Matrix Portal Billboard and Controller
 
 Rationionale for implementation on the M5StickC Plus:
 * I have a few of them laying around
@@ -7,18 +7,20 @@ Rationionale for implementation on the M5StickC Plus:
 
 ## Basic architecture
 
-* `[billboard](AP) <==== wifi ==== [controller](STATION)`
-* This is a close loop system where the controller and billboard are tightly coupled
+* `[billboard] <==== ble (uart) ====> [controller]`
+* This is a closed loop system where the controller and billboard become tightly coupled
 
-    * The controller has the wifi password hardcoded
-    * The controller's function is to send messages to the billboard
-    * Messages sent to the billboard include `screen` information and a duration
-    * The billboard displays the screen until duration has elapsed or a new screen in sent
+    * The billboard creates a BLE Announcement
+    * The controller identifies the the billboard BLE device and connects
+    * The controller's function is to send send simple message to the billboard to change the display content
+    * The billboard will respond with a json object indicating what is currently on display
+    * The billboard displays the screen until duration has elapsed or a screen change command is sent
     * If the `screen` duration expires the 'default' `screen` is displayed on the billboard
 
 * `screens` 
 
     * are the set of options to display on the billboard
+    * may include metadata about scrolling or duration
     * encoded in json format - see the main [README.MD](../README.md)
 
 ## Implementation
@@ -26,19 +28,18 @@ Rationionale for implementation on the M5StickC Plus:
 * Controller:
 
     * has a known set of 'screens' written to its memory
-    * has wifi access
-    * connects to billboard AP
-    * displays the current screen
+    * has ble access
+    * connects to billboard ble
+    * may display a representation of the current screen
         * may display it's connection status
-    * Sends a screen when the A button is pressed
+    * has a way for human interaction to be converted into screen change commands
 
 * Billboard
 
-    * Is a WiFi AP
-    * Hosts 2 http request capabilities
-        * GET (returns information about the billboard)
-        * POST (the screen to display and for how long)
+    * Has BLE 
+    * Responds to single character commands 'p'revious and 'n'ext
+    * Replies with the `screen` currently displayed
 
 ## Usage
 
-* 
+*  Can vary by controller

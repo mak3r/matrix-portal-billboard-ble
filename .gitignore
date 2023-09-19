@@ -3,3 +3,5 @@ secrets.py
 *.uf2
 /CIRCUITPY
 *.bak
+/lib
+*/lib

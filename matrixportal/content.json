@@ -4,8 +4,8 @@
 	"geeko": {"img": "images/geeko.bmp"},
 	"text1": {
 		"text" : "howdy",
-		"bg": "0x800020",
-		"fg": "0x777777"
+		"bg": "0x020202",
+		"fg": "0x101010"
 	},
 	"rancher": {"img": "images/rancher.bmp"},
 	"scroll-text": {

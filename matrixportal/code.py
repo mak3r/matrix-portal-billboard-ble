@@ -47,12 +47,13 @@ display = framebufferio.FramebufferDisplay(matrix)
 
 
 esp32 = ESP32()
-
 adapter = esp32.start_bluetooth()
 
 ble = BLERadio(adapter)
-uart = UARTService()
-advertisement = ProvideServicesAdvertisement(uart)
+ble.name = "Matrix Portal M4"
+uart_server = UARTService()
+advertisement = ProvideServicesAdvertisement(uart_server)
+advertisement.complete_name = "hyvbbd"
 
 class Billboard:
 
@@ -141,13 +142,13 @@ class Billboard:
     def __add_layer__(self, key, item):
         print("key {}, item: {}".format(key,item))
         self.SCROLLING = False
-        layer = None 
+        text_layer = None 
         background = None
         for k in item.keys():
             if k in self.display_types:
                 if k == "text":
                     background = self.make_background(item['bg'])
-                    layer = self.__make_Label__(
+                    text_layer = self.__make_Label__(
                         item[k], 
                         fg=int(item['fg'],16), 
                         bg=None
@@ -156,7 +157,7 @@ class Billboard:
                     self.scroll_rate = float(item['rate'] if "rate" in item.keys() else .1)
                     background = self.make_background(item['bg'])
                     print("background: ", item['bg'])
-                    layer = self.__make_Label__(
+                    text_layer = self.__make_Label__(
                         item[k], 
                         fg=int(item['fg'],16), 
                         bg=None
@@ -165,8 +166,8 @@ class Billboard:
                 elif k == "img":
                     background = self.__make_TileGroup__(item[k])
                 g = self.____make_Group____(background)
-                if (layer is not None):
-                    g.append(layer)
+                if (text_layer is not None):
+                    g.append(text_layer)
                 self.layers[key] = g
 
     def make_background(self, color):
@@ -242,27 +243,39 @@ def display_change():
 
 
 do_scroll = time.monotonic() + billboard.scroll_rate
+CONNECTED = False
 while True:
-    ble.start_advertising(advertisement)
-    print("waiting to connect")
-    while not ble.connected:
+    if not ble.connected:
+        CONNECTED = False
+        if not ble.advertising:
+            print("Start Advertising")
+            ble.start_advertising(advertisement)
         display_change()
-        pass
-    print("connected: trying to read input")
-    while ble.connected:
-        # Returns b'' if nothing was read.
-        one_byte = uart.read(1)
-        if one_byte:
-            print(one_byte)
-            #uart.write(one_byte)
-            if one_byte == b'n':
-                uart.write(json.dumps(billboard.next()).encode('utf-8'))
-            if one_byte == b'p':
-                uart.write(json.dumps(billboard.prev()).encode('utf-8'))
+        # pass
+    if ble.connected:
+        if not CONNECTED:
+            uart_server.write(b'n')
+            print("Remote service: ", uart_server.remote)
+            for c in ble.connections:
+                print("Connection: ", c)
+            CONNECTED = True        
+        if ble.advertising:
+            print("Stop Advertising")
+            ble.stop_advertising()
+        while uart_server.in_waiting > 0:
+            # Returns b'' if nothing was read.
+            one_byte = uart_server.read(1)
+            if one_byte:
+                #print(one_byte)
+                #uart_server.write(one_byte)
+                if one_byte == b'n':
+                    uart_server.write(json.dumps(billboard.next()).encode('utf-8'))
+                if one_byte == b'p':
+                    uart_server.write(json.dumps(billboard.prev()).encode('utf-8'))
         display_change()
     #FIXME: scrolling needs additional logic for functioning 
     # regardless of whether ble is connected or not
-    if billboard.SCROLLING == True:
-        if time.monotonic() > do_scroll:
-            #scroll()
-            do_scroll = time.monotonic() + billboard.scroll_rate
+    # if billboard.SCROLLING == True:
+    #     if time.monotonic() > do_scroll:
+    #         #scroll()
+    #         do_scroll = time.monotonic() + billboard.scroll_rate
