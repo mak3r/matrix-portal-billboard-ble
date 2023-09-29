@@ -1,8 +1,10 @@
 import time
 import random
 import displayio
+import digitalio
 import terminalio
 import adafruit_imageload
+import board
 import gc
 
 from adafruit_ble import BLERadio
@@ -10,7 +12,6 @@ from adafruit_ble import Advertisement
 from adafruit_ble.services.nordic import UARTService
 from adafruit_clue import clue
 from adafruit_display_text import label
-from adafruit_debouncer import Debouncer
 
 # for binding with the matrix portal billboard
 BILLBOARD_NAME = "F-nRF52"
@@ -33,7 +34,6 @@ in_label = label.Label(terminalio.FONT, text='A'*32, scale=2,
 in_label.anchor_point = (0, 0)
 in_label.anchored_position = (5, 12)
 disp_group.append(in_label)
-
 
 # This is the bluetooth low energy connection
 ble_connection = None
@@ -107,29 +107,36 @@ def update_label():
     pass
 
 #NOTE: Consider using Packets for transporting billboard data
+button_delay = 0.3
+last_time = time.monotonic()
 while True:
     if ble.connected:
-        if uart:
-            if clue.button_b:
-                clue.start_tone(587)
-                uart.write(b'n')
-                data = uart.in_waiting
-                if data > 0:
-                    print(uart.read(data))
-                    parse_data()
+        if (time.monotonic() - last_time) > button_delay:
+            if uart:
+                if clue.button_b:
+                    clue.start_tone(587)
+                    uart.write(b'n')
+                    data = uart.in_waiting
+                    if data > 0:
+                        print(uart.read(data))
+                        parse_data()
 
-            if clue.button_a:
-                clue.start_tone(523)
-                uart.write(b'p')
-                data = uart.in_waiting
-                if data > 0:
-                    print(uart.read(data))
-                    parse_data()
+                if clue.button_a:
+                    clue.start_tone(523)
+                    uart.write(b'p')
+                    data = uart.in_waiting
+                    if data > 0:
+                        print(uart.read(data))
+                        parse_data()
+
+            if clue.button_a and clue.button_b:
+                clue.start_tone(459)
+                clear_connection()
+
+            last_time = time.monotonic()
         
-        if clue.button_a and clue.button_b:
-            clue.start_tone(459)
-            clear_connection()
-        
+
+
     else: #BLE not connected
         if clue.button_a and clue.button_b:
             if not billboard:
