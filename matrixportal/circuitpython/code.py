@@ -47,12 +47,17 @@ display = framebufferio.FramebufferDisplay(matrix)
 
 
 esp32 = ESP32()
+
 adapter = esp32.start_bluetooth()
 
 ble = BLERadio(adapter)
 ble.name = "Matrix Portal M4"
 uart_server = UARTService()
-advertisement = ProvideServicesAdvertisement(uart_server)
+advertisement = ProvideServicesAdvertisement(UARTService)
+for svc in advertisement.services:
+    print("service: ", svc)
+    print(svc.complete_name)
+
 advertisement.complete_name = "hyvbbd"
 
 class Billboard:

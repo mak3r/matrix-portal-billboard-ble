@@ -6,7 +6,7 @@ from adafruit_display_text.label import Label
 from adafruit_clue import clue
 from adafruit_ble import BLERadio
 from adafruit_ble.services.nordic import UARTService
-from adafruit_ble.advertising.standard import ProvideServicesAdvertisement
+from adafruit_ble.advertising.standard import SolicitServicesAdvertisement
 from binascii import unhexlify
 
 TARGET = 'e8:9f:6d:d2:74:2a'  # CHANGE TO BLE ADDRESS OF TARGET BILLBOARD
@@ -18,7 +18,7 @@ ble = BLERadio()
 # ble.name = "Billboard Controller"
 print("Device BLE identity: ",  ble.name)
 # advs = {}
-# for adv in ble.start_scan(ProvideServicesAdvertisement, timeout = 5):
+# for adv in ble.start_scan(SolicitServicesAdvertisement, timeout = 5):
 # 	print(type(adv))
 # 	print("Adv: ", adv)
 # 	advs[adv.address] = adv
@@ -34,6 +34,8 @@ display.auto_refresh = True
 
 uart_connection = None
 uart_service = UARTService()
+solicit_adverts = SolicitServicesAdvertisement()
+solicit_adverts.solicited_services.append(UARTService)
 
 # Turn off the neopixel
 clue.pixel.fill(clue.BLACK)
@@ -41,7 +43,7 @@ clue.pixel.fill(clue.BLACK)
 
 if not uart_connection:
     print("Trying to connect...")
-    for adv in ble.start_scan(ProvideServicesAdvertisement):
+    for adv in ble.start_scan(solicit_adverts):
         print("Advertiser: ", adv.complete_name)
         # if adv.address.address_bytes == target_address:
         if UARTService in adv.services:
