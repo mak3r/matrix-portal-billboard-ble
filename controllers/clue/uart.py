@@ -40,9 +40,20 @@ ble_connection = None
 ble = BLERadio()
 # print("BLE Radio name:", ble.name)
 uart = None
-
-in_label.text = "[A+B] to scan\nfor billboard"
 billboard = None
+
+def parse_data():
+    pass
+
+def update_bg():
+    pass
+
+def update_label(text=""):
+    in_label.text = text
+    print(text)
+    print("\n")
+
+update_label("[A+B] to scan\nfor billboard")
 
 def clear_connection():
     global uart
@@ -66,7 +77,7 @@ def scan() -> Advertisement :
             print(f"{advert=}")
             if advert.complete_name == BILLBOARD_NAME:
                 ad = advert
-                in_label.text = "Found {} \n{}".format(ad.complete_name, "[A+B] to connect")
+                update_label("Found {} \n{}".format(ad.complete_name, "[A+B] to connect"))
                 break
     except Exception as e:
         print(e)
@@ -90,21 +101,16 @@ def connect(billboard=None):
                     continue
                 # print("Connection has uart service")
                 uart = connection[UARTService]
-                in_label.text = "\0"
+                update_label("\0")
                 # print("Connected to peripheral via uart.")
                 break
         except Exception as e:
-            in_label.text = "Unable to connect \nto {}.\nPlease rescan[A+B].".format(billboard.complete_name)
+            if billboard:
+                update_label("Unable to connect \nto {}.\nPlease rescan[A+B].".format(billboard.complete_name))
+            else:
+                update_label("Connection failed. Try rescan[A+B].")
             print(e)
 
-def parse_data():
-    pass
-
-def update_bg():
-    pass
-
-def update_label():
-    pass
 
 #NOTE: Consider using Packets for transporting billboard data
 button_delay = 0.3
@@ -116,18 +122,24 @@ while True:
                 if clue.button_b:
                     clue.start_tone(587)
                     uart.write(b'n')
-                    data = uart.in_waiting
-                    if data > 0:
-                        print(uart.read(data))
-                        parse_data()
+                    byte_count = uart.in_waiting
+                    if byte_count > 0:
+                        data = uart.read(byte_count)
+                        if data:
+                            parse_data()
+                            update_label(data.decode('utf-8'))
+                            # print(data, flush=True)
 
                 if clue.button_a:
                     clue.start_tone(523)
                     uart.write(b'p')
-                    data = uart.in_waiting
-                    if data > 0:
-                        print(uart.read(data))
-                        parse_data()
+                    byte_count = uart.in_waiting
+                    if byte_count > 0:
+                        data = uart.read(byte_count)
+                        if data:
+                            parse_data()
+                            update_label(data.decode('utf-8'))
+                            # print(data, flush=True)
 
             if clue.button_a and clue.button_b:
                 clue.start_tone(459)
