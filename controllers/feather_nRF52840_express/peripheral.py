@@ -49,9 +49,8 @@ while True:
 				data = uart.read(uart.in_waiting)
 				if data:
 					uart.write(data)
+					uart.reset_input_buffer()
 					print(data)
-					print("ble connected: ", ble.connected)
-					print("ble advertising: ", ble.advertising)
 		else:
 			print("no BLEConnection")
 			# Try to acquire a BLEConnection
