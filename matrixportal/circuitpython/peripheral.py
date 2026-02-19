@@ -12,41 +12,73 @@ adapter = esp32.start_bluetooth()
 ble = BLERadio(adapter)
 print("BLE Radio name:", ble.name)
 
+ble_connection = None # BLEConnection object
 uart = UARTService()
 advert = ProvideServicesAdvertisement(uart)
-print("Services provided: ")
-for ad in advert.services:
-	print("\t- :", ad)
 
 advert.complete_name = "F-nRF52"
+STALE_CONNECTION = False #when the peer disconnects we have a stale connection 
 
-if ble.advertising:
-	ble.stop_advertising()
-while True:
-	if not ble.connected:
-		if not ble.advertising:
-			print("Start Advertising")
-			ble.start_advertising(advert)
+def advertise():
+	global advert
+	if not ble.advertising:
+		print("Start Advertising")
+		ble.start_advertising(advert)
+
+def stop_advertising():
+	if ble.advertising:
+		print("Stop Advertising")
+		ble.stop_advertising()
+
+def reset_stale_connection():
+	for connection in ble.connections:
+		connection.disconnect()
+		connection = None
+
+def reset_advertising():
+	stop_advertising()
+	advertise()
+
+if not ble.connected:
+	stop_advertising()
+
+print("Entering main loop")
+
+uart.reset_input_buffer()
+while True:	
 	if ble.connected:
-		# NOTE: if the central disconnects but the device is still awake, it does not disconnect the BLEConnection.
-		#       This seems like a bug in the CircuitPython code.
-		if ble.advertising:
-			print("Stop Advertising")
-			ble.stop_advertising()
-		# TODO: After a certain amount of time, reset the radio
-		#		For some reason, the connection gets stale after a central reset
-		#		And the peripheral needs to be restarted.
-		for connection in ble.connections:
-			print("Check connections for uart service")
-			if UARTService not in connection:
-				continue
-			print("Connection has uart service")
-			uart = connection[UARTService]
-			print("Connected with central.")
-			if uart.in_waiting > 0:
+		if ble_connection:
+			STALE_CONNECTION = True # if we lose the connection now, it is considered stale
+			if uart: # and uart.in_waiting > 0:
 				data = uart.read(uart.in_waiting)
 				if data:
 					uart.write(data)
+					uart.reset_input_buffer()
 					print(data)
-				print("bytes remaining:", uart.in_waiting)
-
+		else:
+			print("no BLEConnection")
+			# Try to acquire a BLEConnection
+			for connection in ble.connections:
+				if connection.connected:
+					ble_connection = connection
+					stop_advertising()
+			# # # Now let's advertise for a new connection
+			# # advertise()
+			
+	else: #BLERadio is not connected
+		try:
+			if STALE_CONNECTION:
+				print(f"{STALE_CONNECTION=}")
+				reset_stale_connection()
+				reset_advertising()
+				STALE_CONNECTION = False
+			else:
+				# if ble_connection and ble_connection.connected:
+				# 	ble_connection.disconnect()
+				# ble_connection = None
+				#stop_advertising()
+				advertise()
+				# print("ble not connected")
+				# print("*** advertising ******: ", ble.advertising)
+		except Exception as e:
+			print(e)
